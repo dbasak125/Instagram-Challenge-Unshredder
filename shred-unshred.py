@@ -16,7 +16,23 @@ import matplotlib.pyplot as plt
 
 #shredder
 
-def mostCommon(l):
+cnt = 32
+cntr = 0
+im1 = cv2.imread('/Users/dbasak/Documents/workspace_py/cvip/duck_gs.png',cv2.IMREAD_GRAYSCALE)
+out = im1[::1,:im1.shape[1]-(im1.shape[1]%cnt)+1:1]
+for i in random.sample(xrange(0,cnt),cnt):
+	disp = out[::1,i*(out.shape[1]/cnt)+1:(i+1)*(out.shape[1]/cnt)+1:1]
+	if cntr == 0:
+		result = disp
+		cntr += 1
+	else:
+		result = np.hstack((result, disp))
+
+
+
+#unshredder
+
+def maxCount(l):
 	d = {}
 	for i in l:
 		if i in d:
@@ -26,18 +42,6 @@ def mostCommon(l):
 	idx = sorted(d, key = d.get, reverse = True)[0]
 	print idx, float(d[idx])/l.size*100
 	return np.asarray(([idx, float(d[idx])/l.size*100]), dtype='uint8')
-
-cnt = 64
-cntr = 0
-im1 = cv2.imread('/Users/dbasak/Downloads/workspace_py/cvip/duck_gs.png',cv2.IMREAD_GRAYSCALE)
-out = im1[::1,:im1.shape[1]-(im1.shape[1]%cnt)+1:1]
-for i in random.sample(xrange(0,cnt),cnt):
-	disp = out[::1,i*(out.shape[1]/cnt)+1:(i+1)*(out.shape[1]/cnt)+1:1]
-	if cntr == 0:
-		result = disp
-		cntr += 1
-	else:
-		result = np.hstack((result, disp))
 
 def measure_l2r(i,j): 
   return np.amin([np.power((result[1::1,i:i+1:1]-result[:result.shape[0]-1:1,j:j+1:1]),2).sum(),
@@ -52,16 +56,16 @@ for i in xrange(0,result.shape[1]):
 	else:
 		a = np.append(a, 0)
 
-xx = np.diff(np.asarray(a, dtype='int32'))
+xx = np.diff(np.asarray(a, dtype='int32')) #calculating second derivative
 xx[xx<0]=0
-scale = np.max(xx)/10
+scale = np.max(xx)/10 #find peak distributions
 mx = 0
 ratio = 0
 for i in xrange(1,9):
 	temp = np.copy(xx)
-	temp[temp<(scale*i)]=0
+	temp[temp<(scale*i)]=0 #zero crossing
 	temp = np.diff(np.nonzero(temp)[0])
-	val = mostCommon(temp) 
+	val = maxCount(temp) 
 	if(val[1] > mx):
 		mx = val[1]
 		interval = val[0]
@@ -82,9 +86,7 @@ plt.title('mod shred boundaries')
 plt.plot(x, y)
 plt.show()
 
-cnt = result.shape[1]/interval
-
-#unshredder
+cnt = result.shape[1]/interval #identified no. of divisions
 
 d = {}
 mx = 0
